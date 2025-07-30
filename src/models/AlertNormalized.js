@@ -1,5 +1,3 @@
-// src/models/AlertNormalized.js
-
 class AlertNormalized {
   constructor({
     location = null,
@@ -19,9 +17,17 @@ class AlertNormalized {
     this.facility = facility;
     this.pillow = pillow;
     this.format = format;
+    this.type = this.detectType();
   }
 
-  // Optional helper methods
+  detectType() {
+    if (this.subject) {
+      if (/^(Dr\.|Monitor|Nurse|Security|Device)/i.test(this.subject)) return 'device';
+      return 'patient';
+    }
+    return 'system';
+  }
+
   toLogString() {
     return `[${this.format}] ${this.location} - ${this.subject || 'N/A'} - ${this.event}`;
   }
@@ -30,7 +36,8 @@ class AlertNormalized {
     return {
       location: this.location,
       subject: this.subject,
-      event: this.event
+      event: this.event,
+      type: this.type
     };
   }
 
