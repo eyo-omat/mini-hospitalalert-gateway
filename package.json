@@ -1,0 +1,14 @@
+{
+  "name": "mini-hospital-alert-gateway",
+  "version": "1.0.0",
+  "description": "Simulates hospital alerts to integrate with Vocera Incoming VMI Adapter",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  }
+}
