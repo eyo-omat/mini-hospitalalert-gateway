@@ -1,12 +1,20 @@
 const mongoose = require('mongoose');
 
+const ParsedSchema = new mongoose.Schema({
+  location: String,
+  subject: String,
+  event: String,
+  room: String,
+  bed: String,
+  facility: String,
+  pillow: String,
+  format: String,
+  type: String
+}, { _id: false });
+
 const AlertSchema = new mongoose.Schema({
   rawMessage: { type: String, required: true },
-  parsed: {
-    room: String,
-    patient: String,
-    event: String
-  },
+  parsed: ParsedSchema,
   receivedAt: { type: Date, default: Date.now }
 });
 

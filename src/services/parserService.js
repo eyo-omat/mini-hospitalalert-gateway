@@ -1,7 +1,10 @@
+const normalizeAlert = require('./normalizeAlert');
+
 exports.parseMessage = (message) => {
   if (!message || typeof message !== 'string') return null;
 
-  /*
+  const patterns = [
+    /*
   ──────────────────────────────────────────────────────
   FORMAT A: Standard Room Format
   Example: "Room 314B: John Doe – Heart Rate Critical"
@@ -14,9 +17,16 @@ exports.parseMessage = (message) => {
     (.+)          → Group 3: Event/alert (e.g., "Heart Rate Critical")
   ──────────────────────────────────────────────────────
   */
-  const formatA = /^(.+?):\s+(.+?)\s+–\s+(.+)$/;
-
-  /*
+    {
+      format: 'StandardRoom',
+      regex: /^(.+?):\s+(.+?)\s+–\s+(.+)$/,
+      extract: (match) => ({
+        room: match[1].trim(),
+        subject: match[2].trim(),
+        event: match[3].trim()
+      })
+    },
+    /*
   ──────────────────────────────────────────────────────
   FORMAT B: FacilityRoom:Bed Format (NaviCare-style)
   Example: "General301:1 Code Blue"
@@ -30,8 +40,16 @@ exports.parseMessage = (message) => {
     (.+)          → Group 4: Event/alert (e.g., "Code Blue")
   ──────────────────────────────────────────────────────
   */
-  const formatB = /^([A-Za-z]+)(\d+):(\d+)\s+(.+)$/;
-
+    {
+      format: 'FacilityRoomBed',
+      regex: /^([A-Za-z]+)(\d+):(\d+)\s+(.+)$/,
+      extract: (match) => ({
+        facility: match[1],
+        room: match[2],
+        bed: match[3],
+        event: match[4].trim()
+      })
+    },
   /*
   ──────────────────────────────────────────────────────
   FORMAT C: Pillow+Room+Bed Format
@@ -45,44 +63,25 @@ exports.parseMessage = (message) => {
     (.+)          → Group 4: Event/alert (e.g., "Code Blue")
   ──────────────────────────────────────────────────────
   */
-  const formatC = /^(\d+)\+(\d+)\+(\d+)\s+(.+)$/;
+    {
+      format: 'PillowRoomBed',
+      regex: /^(\d+)\+(\d+)\+(\d+)\s+(.+)$/,
+      extract: (match) => ({
+        pillow: match[1],
+        room: match[2],
+        bed: match[3],
+        event: match[4].trim()
+      })
+    }
+  ];
 
-  let match;
-
-  // Try Format A
-  match = message.match(formatA);
-  if (match) {
-    return {
-      room: match[1].trim(),
-      patient: match[2].trim(),
-      event: match[3].trim(),
-      format: 'StandardRoom'
-    };
+  for (const { format, regex, extract } of patterns) {
+    const match = message.match(regex);
+    if (match) {
+      const fields = extract(match);
+      return normalizeAlert({ format, fields });
+    }
   }
 
-  // Try Format B
-  match = message.match(formatB);
-  if (match) {
-    return {
-      facility: match[1],
-      room: match[2],
-      bed: match[3],
-      event: match[4].trim(),
-      format: 'FacilityRoomBed'
-    };
-  }
-
-  // Try Format C
-  match = message.match(formatC);
-  if (match) {
-    return {
-      pillow: match[1],
-      room: match[2],
-      bed: match[3],
-      event: match[4].trim(),
-      format: 'PillowRoomBed'
-    };
-  }
-
-  return null; // No valid format matched
+  return null; // No match found
 };
